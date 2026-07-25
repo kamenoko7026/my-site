@@ -90,7 +90,7 @@ loadLogs();
 				img.onload = () => {
 					// 容量節約のため最大幅/高さを800pxに自動リサイズ
 					const canvas = document.createElement("canvas");
-					const maxDimension = 800;
+					const maxDimension = 600;
 					let width = img.width;
 					let height = img.height;
 
@@ -111,7 +111,7 @@ loadLogs();
 					const ctx = canvas.getContext("2d");
 					ctx.drawImage(img, 0, 0, width, height);
 
-					currentBase64Image = canvas.toDataURL("image/jpeg", 0.7);
+					currentBase64Image = canvas.toDataURL("image/jpeg", 0.5);
 					if (imagePreview) imagePreview.src = currentBase64Image;
 					if (imagePreviewContainer) imagePreviewContainer.style.display = "inline-block";
 				};
