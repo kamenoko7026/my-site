@@ -34,7 +34,7 @@ const loadLogs = () => {
             id: doc.id,
             ...doc.data()
         }));
-        renderLogs(searchInput.value);
+        renderLogs();
     });
 };
 	// DOM要素の取得
