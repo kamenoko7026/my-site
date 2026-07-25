@@ -1,3 +1,26 @@
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+import {
+  getFirestore
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyDfelrhkfpkFl_VFIW47Zcs1gA-txTMlrs",
+    authDomain: "my-memo7026.firebaseapp.com",
+    projectId: "my-memo7026",
+    storageBucket: "my-memo7026.firebasestorage.app",
+    messagingSenderId: "122969511514",
+    appId: "1:122969511514:web:2e1063072c8f5b5445aa63",
+    measurementId: "G-2HJ5DFXBY8"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+	const db = getFirestore(app);
+
 document.addEventListener("DOMContentLoaded", () => {
 	// DOM要素の取得
 	const postDate = document.getElementById("postDate");
