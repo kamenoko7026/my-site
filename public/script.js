@@ -6,10 +6,10 @@ import {
   getFirestore,
   collection,
   addDoc,
-  getDocs,
-  deletDoc,
+  deleteDoc,
   doc,
-  updateDoc
+  updateDoc,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
   // Your web app's Firebase configuration
   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -28,18 +28,15 @@ import {
   const db = getFirestore(app);
 
 document.addEventListener("DOMContentLoaded", () => {
-	const loadLogs = async () => {
-	const snapshot = await getDocs(collection(db, "logs"));
-
-	logs = snapshot.docs.map((doc) => ({
-		id: doc.id,
-		...doc.data()
-	}));
-
-	renderLogs();
+const loadLogs = () => {
+    onSnapshot(collection(db, "logs"), (snapshot) => {
+        logs = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        renderLogs(searchInput.value);
+    });
 };
-
-loadLogs();
 	// DOM要素の取得
 	const postDate = document.getElementById("postDate");
 	const postText = document.getElementById("postText");
@@ -130,99 +127,6 @@ loadLogs();
 			if (imagePreviewContainer) imagePreviewContainer.style.display = "none";
 		});
 	}
-
-	// ------------------------------------
-	// データの保存
-	// ------------------------------------
-	const saveLogs = () => {
-		try {
-			localStorage.setItem("love_logs", JSON.stringify(logs));
-		} catch (error) {
-			alert("保存容量の上限に達しました。不要な思い出や画像を整理してください。");
-		}
-	};
-
-	// ------------------------------------
-// バックアップ書き出し
-// ------------------------------------
-const exportButton = document.getElementById("exportButton");
-
-if (exportButton) {
-	exportButton.addEventListener("click", () => {
-		const data = localStorage.getItem("love_logs");
-
-		if (!data) {
-			alert("バックアップするデータがありません。");
-			return;
-		}
-
-		const blob = new Blob([data], {
-			type: "application/json"
-		});
-
-		const url = URL.createObjectURL(blob);
-
-		const a = document.createElement("a");
-		a.href = url;
-		a.download = `love_log_backup_${new Date().toISOString().slice(0,10)}.json`;
-		a.click();
-
-		URL.revokeObjectURL(url);
-	});
-}
-
-// ------------------------------------
-// バックアップ復元
-// ------------------------------------
-const importButton = document.getElementById("importButton");
-const importFile = document.getElementById("importFile");
-
-if (importButton) {
-	importButton.addEventListener("click", () => {
-
-		if (!importFile.files.length) {
-			alert("バックアップファイルを選択してください。");
-			return;
-		}
-
-		const reader = new FileReader();
-
-		reader.onload = (e) => {
-
-			try {
-
-				const importedLogs = JSON.parse(e.target.result);
-
-				if (!Array.isArray(importedLogs)) {
-					alert("バックアップファイルではありません。");
-					return;
-				}
-
-				if (!confirm("現在のデータを上書きして復元しますか？")) {
-					return;
-				}
-
-				localStorage.setItem(
-					"love_logs",
-					JSON.stringify(importedLogs)
-				);
-
-				alert("復元が完了しました！");
-
-				location.reload();
-
-			} catch {
-
-				alert("ファイルを読み込めませんでした。");
-
-			}
-
-		};
-
-		reader.readAsText(importFile.files[0]);
-
-	});
-}
 
 	// ------------------------------------
 	// 投稿カードの描画（思い出一覧の更新）
@@ -330,12 +234,11 @@ if (importButton) {
 			};
 
 			// Firestoreへ保存
-			await addDoc(collection(db, "logs"), newLog);
-			newlog.id = docRef.id;
-			
-			// 画面更新
-			logs.unshift(newLog);
-			renderLogs(searchInput ? searchInput.value : "");
+			const docRef = await addDoc(
+			    collection(db, "logs"),
+			    newLog
+			);
+			newLog.id = docRef.id;
 
 			// フォームリセット
 			if (postDate) postDate.value = getTodayYMD();
@@ -365,8 +268,6 @@ if (importButton) {
 				const id = target.dataset.id;
 				if (confirm("この思い出を削除してもよろしいですか？")) {
 					await deleteDoc(doc(db, "logs", id));
-					logs = logs.filter((log) => log.id !== id);
-					renderLogs(searchInput ? searchInput.value : "");
 				}
 			}
 
@@ -379,7 +280,6 @@ if (importButton) {
 					await updateDoc(doc(db, "logs", id), {
 						favorite: targetLog.favorite
 					});
-					renderLogs(searchInput ? searchInput.value : "");
 				}
 			}
 		});
@@ -395,5 +295,5 @@ if (importButton) {
 	}
 
 	// 初期描画
-	renderLogs();
+	loadLogs();
 });
