@@ -321,7 +321,6 @@ if (importButton) {
 			const tags = rawTags.map((t) => t.trim()).filter((t) => t.length > 0);
 
 			const newLog = {
-				id: Date.now(),
 				date: selectedDate,
 				text: text,
 				image: currentBase64Image,
@@ -332,6 +331,7 @@ if (importButton) {
 
 			// Firestoreへ保存
 			await addDoc(collection(db, "logs"), newLog);
+			newlog.id = docRef.id;
 			
 			// 画面更新
 			logs.unshift(newLog);
@@ -357,26 +357,28 @@ if (importButton) {
 	// リスト内のイベント（削除 & お気に入りトグル）
 	// ------------------------------------
 	if (postList) {
-		postList.addEventListener("click", (e) => {
+		postList.addEventListener("click", async (e) => {
 			const target = e.target;
 
 			// 削除ボタンクリック
 			if (target.classList.contains("delete-btn")) {
-				const id = Number(target.dataset.id);
+				const id = target.dataset.id;
 				if (confirm("この思い出を削除してもよろしいですか？")) {
+					await deleteDoc(doc(db, "logs", id));
 					logs = logs.filter((log) => log.id !== id);
-					saveLogs();
 					renderLogs(searchInput ? searchInput.value : "");
 				}
 			}
 
 			// お気に入り⭐ボタンクリック
 			if (target.classList.contains("fav-star-btn")) {
-				const id = Number(target.dataset.id);
+				const id = target.dataset.id;
 				const targetLog = logs.find((log) => log.id === id);
 				if (targetLog) {
 					targetLog.favorite = !targetLog.favorite;
-					saveLogs();
+					await updateDoc(doc(db, "logs", id), {
+						favorite: targetLog.favorite
+					});
 					renderLogs(searchInput ? searchInput.value : "");
 				}
 			}
