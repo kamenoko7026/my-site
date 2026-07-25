@@ -102,6 +102,88 @@ document.addEventListener("DOMContentLoaded", () => {
 	};
 
 	// ------------------------------------
+// バックアップ書き出し
+// ------------------------------------
+const exportButton = document.getElementById("exportButton");
+
+if (exportButton) {
+	exportButton.addEventListener("click", () => {
+		const data = localStorage.getItem("love_logs");
+
+		if (!data) {
+			alert("バックアップするデータがありません。");
+			return;
+		}
+
+		const blob = new Blob([data], {
+			type: "application/json"
+		});
+
+		const url = URL.createObjectURL(blob);
+
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `love_log_backup_${new Date().toISOString().slice(0,10)}.json`;
+		a.click();
+
+		URL.revokeObjectURL(url);
+	});
+}
+
+// ------------------------------------
+// バックアップ復元
+// ------------------------------------
+const importButton = document.getElementById("importButton");
+const importFile = document.getElementById("importFile");
+
+if (importButton) {
+	importButton.addEventListener("click", () => {
+
+		if (!importFile.files.length) {
+			alert("バックアップファイルを選択してください。");
+			return;
+		}
+
+		const reader = new FileReader();
+
+		reader.onload = (e) => {
+
+			try {
+
+				const importedLogs = JSON.parse(e.target.result);
+
+				if (!Array.isArray(importedLogs)) {
+					alert("バックアップファイルではありません。");
+					return;
+				}
+
+				if (!confirm("現在のデータを上書きして復元しますか？")) {
+					return;
+				}
+
+				localStorage.setItem(
+					"love_logs",
+					JSON.stringify(importedLogs)
+				);
+
+				alert("復元が完了しました！");
+
+				location.reload();
+
+			} catch {
+
+				alert("ファイルを読み込めませんでした。");
+
+			}
+
+		};
+
+		reader.readAsText(importFile.files[0]);
+
+	});
+}
+
+	// ------------------------------------
 	// 投稿カードの描画（思い出一覧の更新）
 	// ------------------------------------
 	const renderLogs = (filterKeyword = "") => {
