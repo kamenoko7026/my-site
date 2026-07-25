@@ -3,7 +3,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/fireba
   // TODO: Add SDKs for Firebase products that you want to use
   // https://firebase.google.com/docs/web/setup#available-libraries
 import {
-  getFirestore
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deletDoc,
+  doc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
   // Your web app's Firebase configuration
   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -22,6 +28,18 @@ import {
   const db = getFirestore(app);
 
 document.addEventListener("DOMContentLoaded", () => {
+	const loadLogs = async () => {
+	const snapshot = await getDocs(collection(db, "logs"));
+
+	logs = snapshot.docs.map((doc) => ({
+		id: doc.id,
+		...doc.data()
+	}));
+
+	renderLogs();
+};
+
+loadLogs();
 	// DOM要素の取得
 	const postDate = document.getElementById("postDate");
 	const postText = document.getElementById("postText");
@@ -40,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	let currentBase64Image = "";
 
 	// ローカルストレージからデータ取得（なければ空配列）
-	let logs = JSON.parse(localStorage.getItem("love_logs")) || [];
+	let logs = [];
 
 	// ------------------------------------
 	// 本日の日付文字列取得 (YYYY-MM-DD フォーマット)
@@ -286,7 +304,7 @@ if (importButton) {
 	// 新規投稿イベント
 	// ------------------------------------
 	if (saveButton) {
-		saveButton.addEventListener("click", () => {
+		saveButton.addEventListener("click", async () => {
 			const text = postText ? postText.value.trim() : "";
 
 			if (!text && !currentBase64Image) {
@@ -312,9 +330,12 @@ if (importButton) {
 				favorite: favoriteCheckbox ? favoriteCheckbox.checked : false,
 			};
 
-			// 配列に追加
+			// Firestoreへ保存
+			await addDoc(collection(db, "logs"), newLog);
+			
+			// 画面更新
 			logs.unshift(newLog);
-			saveLogs();
+			renderLogs(searchInput ? searchInput.value : "");
 
 			// フォームリセット
 			if (postDate) postDate.value = getTodayYMD();
